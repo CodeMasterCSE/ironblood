@@ -323,7 +323,6 @@ class SupabaseService {
         if (res != null && res.isNotEmpty) {
           final adminData = Map<String, dynamic>.from(res);
           await _saveCacheMap(_keyCacheAdminProfile, adminData);
-          await SessionService.saveAdminSession(adminData);
           return adminData;
         }
       }

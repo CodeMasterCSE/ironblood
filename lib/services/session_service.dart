@@ -113,5 +113,6 @@ class SessionService {
     await prefs.remove(_keyRole);
     await prefs.remove(_keyMemberData);
     await prefs.remove(_keyTrainerData);
+    await prefs.remove(_keyAdminData);
   }
 }
