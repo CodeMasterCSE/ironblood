@@ -10,6 +10,36 @@ import 'auth_screen.dart';
 
 enum AdminSection { members, trainers, renewals, pt, plans, revenue, announcements }
 
+/// Formats 12 digits into 3 groups of 4 digits: XXXX XXXX XXXX
+class AadharCardFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+    final limited = digits.length > 12 ? digits.substring(0, 12) : digits;
+    final buffer = StringBuffer();
+    for (int i = 0; i < limited.length; i++) {
+      if (i > 0 && i % 4 == 0) {
+        buffer.write(' ');
+      }
+      buffer.write(limited[i]);
+    }
+    final string = buffer.toString();
+    return TextEditingValue(
+      text: string,
+      selection: TextSelection.collapsed(offset: string.length),
+    );
+  }
+}
+
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
 
@@ -638,10 +668,10 @@ class _AdminScreenState extends State<AdminScreen> {
         memberToEdit['emergency_phone'],
       );
       _memberEmailController.text = memberToEdit['email'] ?? '';
-      _memberAadharController.text =
-          memberToEdit['aadhar_number']?.toString() ??
-          memberToEdit['aadhar']?.toString() ??
-          '';
+      _memberAadharController.text = SupabaseService.revealAadhar(
+        memberToEdit['aadhar_number']?.toString() ??
+            memberToEdit['aadhar']?.toString(),
+      );
       final addrParsed = _parseStructuredAddress(
         memberToEdit['address']?.toString(),
       );
@@ -703,6 +733,7 @@ class _AdminScreenState extends State<AdminScreen> {
     final discountController = TextEditingController();
     double discountAmount = 0.0;
     String paymentMode = 'UPI';
+    bool obscureMemberAadhar = true;
 
     showModalBottomSheet(
       context: context,
@@ -911,9 +942,28 @@ class _AdminScreenState extends State<AdminScreen> {
                       _buildInputField(
                         controller: _memberAadharController,
                         label: "AADHAR CARD NUMBER (12 DIGITS)",
-                        hint: "e.g. 1234 5678 9012",
+                        hint: "1234 5678 9012",
                         icon: Icons.fingerprint_rounded,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [AadharCardFormatter()],
+                        obscureText: obscureMemberAadhar,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureMemberAadhar
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: primaryGold,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            setModalState(() {
+                              obscureMemberAadhar = !obscureMemberAadhar;
+                            });
+                          },
+                          tooltip: obscureMemberAadhar
+                              ? "Reveal Aadhar Number"
+                              : "Mask Aadhar Number",
+                        ),
                       ),
                       const SizedBox(height: 14),
 
@@ -3489,10 +3539,10 @@ class _AdminScreenState extends State<AdminScreen> {
         trainerToEdit['phone'],
       );
       _trainerEmailController.text = trainerToEdit['email'] ?? '';
-      _trainerAadharController.text =
-          trainerToEdit['aadhar_number']?.toString() ??
-          trainerToEdit['aadhar']?.toString() ??
-          '';
+      _trainerAadharController.text = SupabaseService.revealAadhar(
+        trainerToEdit['aadhar_number']?.toString() ??
+            trainerToEdit['aadhar']?.toString(),
+      );
       final addrParsed = _parseStructuredAddress(
         trainerToEdit['address']?.toString(),
       );
@@ -3526,6 +3576,7 @@ class _AdminScreenState extends State<AdminScreen> {
       _trainerPasswordController.text = "ironblood123";
       _trainerPhotoUrl = null;
     }
+    bool obscureTrainerAadhar = true;
 
     showModalBottomSheet(
       context: context,
@@ -3707,9 +3758,28 @@ class _AdminScreenState extends State<AdminScreen> {
                     _buildInputField(
                       controller: _trainerAadharController,
                       label: "AADHAR CARD NUMBER (12 DIGITS)",
-                      hint: "e.g. 1234 5678 9012",
+                      hint: "1234 5678 9012",
                       icon: Icons.fingerprint_rounded,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [AadharCardFormatter()],
+                      obscureText: obscureTrainerAadhar,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscureTrainerAadhar
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: primaryGold,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          setModalState(() {
+                            obscureTrainerAadhar = !obscureTrainerAadhar;
+                          });
+                        },
+                        tooltip: obscureTrainerAadhar
+                            ? "Reveal Aadhar Number"
+                            : "Mask Aadhar Number",
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -4893,24 +4963,6 @@ class _AdminScreenState extends State<AdminScreen> {
                                               ),
                                           ],
                                         ),
-                                        if (member['aadhar_number'] != null &&
-                                            member['aadhar_number']
-                                                .toString()
-                                                .trim()
-                                                .isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 2,
-                                            ),
-                                            child: Text(
-                                              "Aadhar: ${SupabaseService.formatAadharNumber(member['aadhar_number'].toString())}",
-                                              style: GoogleFonts.rajdhani(
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white70,
-                                              ),
-                                            ),
-                                          ),
                                       ],
                                     ),
                                   ),
@@ -5501,44 +5553,19 @@ class _AdminScreenState extends State<AdminScreen> {
                                                 height: 1.0,
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                        if (trainer['aadhar_number'] != null &&
-                                            trainer['aadhar_number']
-                                                .toString()
-                                                .trim()
-                                                .isNotEmpty)
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.fingerprint_rounded,
-                                                size: 11,
-                                                color: primaryGold,
-                                              ),
-                                              const SizedBox(width: 3),
-                                              Text(
-                                                "Aadhar: ${SupabaseService.formatAadharNumber(trainer['aadhar_number'].toString())}",
-                                                style: GoogleFonts.rajdhani(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white70,
-                                                  height: 1.0,
-                                                ),
-                                              ),
                                             ],
                                           ),
-                                      ],
-                                    ),
-                                  ],
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
+                    );
                 },
               ),
 
@@ -5800,6 +5827,8 @@ class _AdminScreenState extends State<AdminScreen> {
     required IconData icon,
     bool enabled = true,
     bool isPhone = false,
+    bool obscureText = false,
+    Widget? suffixIcon,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
     String? Function(String?)? validator,
@@ -5823,6 +5852,7 @@ class _AdminScreenState extends State<AdminScreen> {
         TextFormField(
           controller: controller,
           maxLines: maxLines,
+          obscureText: obscureText,
           validator:
               validator ??
               (phoneField
@@ -5849,6 +5879,7 @@ class _AdminScreenState extends State<AdminScreen> {
             color: enabled ? Colors.white : Colors.white54,
           ),
           decoration: InputDecoration(
+            suffixIcon: suffixIcon,
             hintText: phoneField ? "98765 43210" : hint,
             hintStyle: GoogleFonts.rajdhani(
               color: Colors.white.withValues(alpha: 0.25),

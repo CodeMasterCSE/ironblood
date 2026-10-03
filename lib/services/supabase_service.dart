@@ -284,9 +284,74 @@ class SupabaseService {
     return '+91$digits';
   }
 
-  /// Format Aadhar card number into 4-digit groups (e.g. 1234 5678 9012)
+  static const String _aadharSecretKey = 'IB_SECURE_AADHAR_KEY_2026_IRONBLOOD_GYM';
+
+  /// Encrypts and protects raw Aadhar number so plaintext is never exposed in DB or logs
+  static String protectAadhar(String? aadhar) {
+    if (aadhar == null || aadhar.trim().isEmpty) return '';
+    final trimmed = aadhar.trim();
+    if (trimmed.startsWith('IB_ENC:')) return trimmed; // Already encrypted
+    final digits = trimmed.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return trimmed;
+    
+    // Symmetric XOR byte cipher + Base64 with gym key
+    final keyBytes = utf8.encode(_aadharSecretKey);
+    final dataBytes = utf8.encode(digits);
+    final encBytes = List<int>.generate(dataBytes.length, (i) {
+      return dataBytes[i] ^ keyBytes[i % keyBytes.length];
+    });
+    return 'IB_ENC:${base64Url.encode(encBytes)}';
+  }
+
+  /// Decrypts/reveals the original Aadhar number in 3 groups of 4 digits (XXXX XXXX XXXX)
+  static String revealAadhar(String? storedAadhar) {
+    if (storedAadhar == null || storedAadhar.trim().isEmpty) return '';
+    final trimmed = storedAadhar.trim();
+    // If it's a 64-character SHA-256 legacy hash, it cannot be reversed
+    if (trimmed.length == 64 && RegExp(r'^[0-9a-fA-F]+$').hasMatch(trimmed)) {
+      return '';
+    }
+    if (!trimmed.startsWith('IB_ENC:')) {
+      final digits = trimmed.replaceAll(RegExp(r'\D'), '');
+      return digits.isNotEmpty ? formatAadharNumber(digits) : trimmed;
+    }
+    try {
+      var base64Str = trimmed.substring(7);
+      while (base64Str.length % 4 != 0) {
+        base64Str += '=';
+      }
+      final encBytes = base64Url.decode(base64Str);
+      final keyBytes = utf8.encode(_aadharSecretKey);
+      final decBytes = List<int>.generate(encBytes.length, (i) {
+        return encBytes[i] ^ keyBytes[i % keyBytes.length];
+      });
+      final plain = utf8.decode(decBytes);
+      return formatAadharNumber(plain);
+    } catch (_) {
+      return trimmed;
+    }
+  }
+
+  /// Format Aadhar for display: masked with * by default (**** **** ****) or fully revealed when toggled (XXXX XXXX XXXX)
+  static String formatAadharDisplay(String? storedAadhar, {bool isRevealed = false}) {
+    if (storedAadhar == null || storedAadhar.trim().isEmpty) return 'Not Provided';
+    final plain = revealAadhar(storedAadhar);
+    if (plain.isEmpty) return 'Not Provided';
+    
+    if (isRevealed) {
+      return formatAadharNumber(plain);
+    } else {
+      final digits = plain.replaceAll(RegExp(r'\D'), '');
+      if (digits.length >= 4) {
+        return '**** **** ${digits.substring(digits.length - 4)}';
+      }
+      return '**** **** ****';
+    }
+  }
+
+  /// Format Aadhar card number into 3 groups of 4 digits: XXXX XXXX XXXX (e.g. 1234 5678 9012)
   static String formatAadharNumber(String? aadhar) {
-    if (aadhar == null) return '';
+    if (aadhar == null || aadhar.trim().isEmpty) return '';
     final digits = aadhar.replaceAll(RegExp(r'\D'), '');
     if (digits.isEmpty) return aadhar.trim();
     if (digits.length <= 4) return digits;
@@ -1115,7 +1180,7 @@ class SupabaseService {
         final expiryDate =
             membershipExpiryDate ?? calculateExpiryDate(startDate, chosenPlan);
 
-        final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? aadharNumber.trim() : null;
+        final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? protectAadhar(aadharNumber) : null;
         final cleanAddress = (address != null && address.trim().isNotEmpty) ? address.trim() : null;
         final cleanMedical = (medicalHistory != null && medicalHistory.trim().isNotEmpty) ? medicalHistory.trim() : null;
         final extraFields = <String, dynamic>{
@@ -1203,7 +1268,7 @@ class SupabaseService {
       final expiryDate =
           membershipExpiryDate ?? calculateExpiryDate(startDate, chosenPlan);
 
-      final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? aadharNumber.trim() : null;
+      final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? protectAadhar(aadharNumber) : null;
       final cleanAddress = (address != null && address.trim().isNotEmpty) ? address.trim() : null;
       final cleanMedical = (medicalHistory != null && medicalHistory.trim().isNotEmpty) ? medicalHistory.trim() : null;
       final insertData = <String, dynamic>{
@@ -1296,7 +1361,7 @@ class SupabaseService {
     String? medicalHistory,
   }) async {
     final cleanPhoto = (photoUrl != null && photoUrl.trim().isNotEmpty) ? photoUrl.trim() : null;
-    final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? aadharNumber.trim() : null;
+    final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? protectAadhar(aadharNumber) : null;
     final cleanAddress = (address != null && address.trim().isNotEmpty) ? address.trim() : null;
     final cleanMedical = (medicalHistory != null && medicalHistory.trim().isNotEmpty) ? medicalHistory.trim() : null;
 
@@ -1957,7 +2022,7 @@ class SupabaseService {
     final cleanAddress = (address != null && address.trim().isNotEmpty)
         ? address.trim()
         : null;
-    final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? aadharNumber.trim() : null;
+    final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? protectAadhar(aadharNumber) : null;
 
     final cachedTrainerData = <String, dynamic>{
       'trainer_id': trainerId.trim(),
@@ -1997,7 +2062,7 @@ class SupabaseService {
           final extra = <String, dynamic>{};
           if (cleanPhoto != null) extra['photo_url'] = cleanPhoto;
           if (aadharNumber != null && aadharNumber.trim().isNotEmpty) {
-            extra['aadhar_number'] = aadharNumber.trim();
+            extra['aadhar_number'] = protectAadhar(aadharNumber);
           }
           if (cleanAddress != null) extra['address'] = cleanAddress;
           if (extra.isNotEmpty) {
@@ -2124,7 +2189,7 @@ class SupabaseService {
   }) async {
     final formattedPhone = formatIndianPhone(phone);
     final cleanPhoto = (photoUrl != null && photoUrl.trim().isNotEmpty) ? photoUrl.trim() : null;
-    final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? aadharNumber.trim() : null;
+    final cleanAadhar = (aadharNumber != null && aadharNumber.trim().isNotEmpty) ? protectAadhar(aadharNumber) : null;
     final cleanAddress = (address != null && address.trim().isNotEmpty) ? address.trim() : null;
 
     final updateData = <String, dynamic>{

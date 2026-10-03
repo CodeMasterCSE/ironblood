@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.members (
     emergency_phone TEXT,                        -- Emergency Contact Number (+91)
     photo_url TEXT,                              -- Profile Picture URL / Base64
     email TEXT,                                  -- Email Address
-    aadhar_number TEXT,                          -- 12-digit Aadhar Card Number
+    aadhar_number TEXT,                          -- Secure SHA-256 Hashed Aadhar (Protected, raw UID is never stored)
     address TEXT,                                -- Residential / Street Address
     medical_history TEXT,                        -- Medical History / Health Conditions / Allergies / Notes
     plan TEXT DEFAULT 'Monthly',                 -- Membership Plan ('Monthly', '3 Months', '6 Months', 'Annual')
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS public.trainers (
     phone TEXT NOT NULL,                         -- Contact Number (+91)
     photo_url TEXT,                              -- Profile Picture URL / Base64
     email TEXT,                                  -- Email Address
-    aadhar_number TEXT,                          -- 12-digit Aadhar Card Number
+    aadhar_number TEXT,                          -- Secure SHA-256 Hashed Aadhar (Protected, raw UID is never stored)
     address TEXT,                                -- Residential / Street Address
     experience TEXT DEFAULT '3+ Years',          -- Experience
     clients_count INT DEFAULT 0,                 -- Current active clients

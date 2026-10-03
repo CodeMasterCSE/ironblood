@@ -1,14 +1,10 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:open_filex/open_filex.dart';
 
 class InvoiceLineItem {
   final String description;
@@ -35,7 +31,8 @@ class InvoiceModel {
   final String memberName;
   final String memberPhone;
   final String memberEmail;
-  final String category; // 'MEMBERSHIP ENROLLMENT', 'MEMBERSHIP RENEWAL', 'PERSONAL TRAINING (PT)'
+  final String
+  category; // 'MEMBERSHIP ENROLLMENT', 'MEMBERSHIP RENEWAL', 'PERSONAL TRAINING (PT)'
   final String planName;
   final String? trainerName;
   final DateTime startDate;
@@ -66,35 +63,38 @@ class InvoiceModel {
     this.paymentMode = 'UPI',
     this.notes,
     List<InvoiceLineItem>? items,
-  })  : memberPhone = memberPhone ?? '',
-        memberEmail = memberEmail ?? '',
-        startDate = startDate ?? invoiceDate,
-        expiryDate = expiryDate ?? invoiceDate.add(const Duration(days: 30)),
-        basePrice = basePrice ?? baseAmount ?? finalAmount,
-        items = (items != null && items.isNotEmpty)
-            ? items
-            : [
-                InvoiceLineItem(
-                  description: planName,
-                  category: category,
-                  coachOrDetails: (trainerName != null &&
-                          trainerName.isNotEmpty &&
-                          trainerName != 'Unassigned')
-                      ? 'Dedicated Coach: '
-                      : null,
-                  startDate: startDate ?? invoiceDate,
-                  expiryDate:
-                      expiryDate ?? invoiceDate.add(const Duration(days: 30)),
-                  amount: basePrice ?? baseAmount ?? finalAmount,
-                ),
-              ];
+  }) : memberPhone = memberPhone ?? '',
+       memberEmail = memberEmail ?? '',
+       startDate = startDate ?? invoiceDate,
+       expiryDate = expiryDate ?? invoiceDate.add(const Duration(days: 30)),
+       basePrice = basePrice ?? baseAmount ?? finalAmount,
+       items = (items != null && items.isNotEmpty)
+           ? items
+           : [
+               InvoiceLineItem(
+                 description: planName,
+                 category: category,
+                 coachOrDetails:
+                     (trainerName != null &&
+                         trainerName.isNotEmpty &&
+                         trainerName != 'Unassigned')
+                     ? 'Dedicated Coach: '
+                     : null,
+                 startDate: startDate ?? invoiceDate,
+                 expiryDate:
+                     expiryDate ?? invoiceDate.add(const Duration(days: 30)),
+                 amount: basePrice ?? baseAmount ?? finalAmount,
+               ),
+             ];
 
   static String generateInvoiceNo({String prefix = 'INV'}) {
     final now = DateTime.now();
     final datePart =
         "${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}";
-    final randPart =
-        (now.millisecondsSinceEpoch % 10000).toString().padLeft(4, '0');
+    final randPart = (now.millisecondsSinceEpoch % 10000).toString().padLeft(
+      4,
+      '0',
+    );
     return "IB-$prefix-$datePart-$randPart";
   }
 }
@@ -111,8 +111,18 @@ class InvoiceService {
 
   static String _formatDate(DateTime dt) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return "${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}";
   }
@@ -133,18 +143,46 @@ class InvoiceService {
   static String _numberToWords(int number) {
     if (number == 0) return "Zero";
     final units = [
-      "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
-      "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
-      "Seventeen", "Eighteen", "Nineteen"
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
     ];
     final tens = [
-      "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
     ];
 
     String convertLessThanOneThousand(int n) {
       if (n == 0) return "";
       if (n < 20) return "${units[n]} ";
-      if (n < 100) return "${tens[n ~/ 10]} ${convertLessThanOneThousand(n % 10)}";
+      if (n < 100) {
+        return "${tens[n ~/ 10]} ${convertLessThanOneThousand(n % 10)}";
+      }
       return "${units[n ~/ 100]} Hundred ${convertLessThanOneThousand(n % 100)}";
     }
 
@@ -215,8 +253,13 @@ class InvoiceService {
                           alignment: pw.Alignment.center,
                           decoration: pw.BoxDecoration(
                             color: const PdfColor.fromInt(0xFF09140E),
-                            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
-                            border: pw.Border.all(color: formalGold, width: 1.5),
+                            borderRadius: const pw.BorderRadius.all(
+                              pw.Radius.circular(6),
+                            ),
+                            border: pw.Border.all(
+                              color: formalGold,
+                              width: 1.5,
+                            ),
                           ),
                           child: pw.Center(
                             child: pw.ClipRRect(
@@ -275,10 +318,15 @@ class InvoiceService {
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
                       pw.Container(
-                        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: pw.BoxDecoration(
                           color: formalNavy,
-                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                          borderRadius: const pw.BorderRadius.all(
+                            pw.Radius.circular(3),
+                          ),
                         ),
                         child: pw.Text(
                           "TAX INVOICE / RECEIPT",
@@ -303,7 +351,10 @@ class InvoiceService {
                       pw.RichText(
                         text: pw.TextSpan(
                           text: "Invoice No: ",
-                          style: const pw.TextStyle(fontSize: 9, color: formalMuted),
+                          style: const pw.TextStyle(
+                            fontSize: 9,
+                            color: formalMuted,
+                          ),
                           children: [
                             pw.TextSpan(
                               text: invoice.invoiceNo,
@@ -319,7 +370,10 @@ class InvoiceService {
                       pw.RichText(
                         text: pw.TextSpan(
                           text: "Date of Issue: ",
-                          style: const pw.TextStyle(fontSize: 9, color: formalMuted),
+                          style: const pw.TextStyle(
+                            fontSize: 9,
+                            color: formalMuted,
+                          ),
                           children: [
                             pw.TextSpan(
                               text: _formatDate(invoice.invoiceDate),
@@ -355,7 +409,9 @@ class InvoiceService {
                       decoration: pw.BoxDecoration(
                         color: formalBg,
                         border: pw.Border.all(color: formalBorder, width: 0.8),
-                        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                        borderRadius: const pw.BorderRadius.all(
+                          pw.Radius.circular(4),
+                        ),
                       ),
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -381,15 +437,24 @@ class InvoiceService {
                           pw.SizedBox(height: 2),
                           pw.Text(
                             "Category: Physical Fitness Centre Services",
-                            style: const pw.TextStyle(fontSize: 8.5, color: formalMuted),
+                            style: const pw.TextStyle(
+                              fontSize: 8.5,
+                              color: formalMuted,
+                            ),
                           ),
                           pw.Text(
                             "Mobile: +91 82820 72600",
-                            style: const pw.TextStyle(fontSize: 8.5, color: formalMuted),
+                            style: const pw.TextStyle(
+                              fontSize: 8.5,
+                              color: formalMuted,
+                            ),
                           ),
                           pw.Text(
                             "Email: ironbloodmuscleandfitness@gmail.com",
-                            style: const pw.TextStyle(fontSize: 8.5, color: formalMuted),
+                            style: const pw.TextStyle(
+                              fontSize: 8.5,
+                              color: formalMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -406,7 +471,9 @@ class InvoiceService {
                       decoration: pw.BoxDecoration(
                         color: formalBg,
                         border: pw.Border.all(color: formalBorder, width: 0.8),
-                        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                        borderRadius: const pw.BorderRadius.all(
+                          pw.Radius.circular(4),
+                        ),
                       ),
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -432,17 +499,26 @@ class InvoiceService {
                           pw.SizedBox(height: 2),
                           pw.Text(
                             "Member ID: ${invoice.memberId}",
-                            style: const pw.TextStyle(fontSize: 8.5, color: formalMuted),
+                            style: const pw.TextStyle(
+                              fontSize: 8.5,
+                              color: formalMuted,
+                            ),
                           ),
                           if (invoice.memberPhone.isNotEmpty)
                             pw.Text(
                               "Mobile: ${invoice.memberPhone}",
-                              style: const pw.TextStyle(fontSize: 8.5, color: formalMuted),
+                              style: const pw.TextStyle(
+                                fontSize: 8.5,
+                                color: formalMuted,
+                              ),
                             ),
                           if (invoice.memberEmail.isNotEmpty)
                             pw.Text(
                               "Email: ${invoice.memberEmail}",
-                              style: const pw.TextStyle(fontSize: 8.5, color: formalMuted),
+                              style: const pw.TextStyle(
+                                fontSize: 8.5,
+                                color: formalMuted,
+                              ),
                             ),
                         ],
                       ),
@@ -459,13 +535,18 @@ class InvoiceService {
               pw.Container(
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: formalBorder, width: 0.8),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(4),
+                  ),
                 ),
                 child: pw.Column(
                   children: [
                     // Table Header
                     pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      padding: const pw.EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 7,
+                      ),
                       color: formalDark,
                       child: pw.Row(
                         children: [
@@ -527,7 +608,10 @@ class InvoiceService {
                           ? const PdfColor.fromInt(0xFFF8FAFC)
                           : PdfColors.white;
                       return pw.Container(
-                        padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
                         decoration: pw.BoxDecoration(
                           color: rowBg,
                           border: !isLast
@@ -546,7 +630,10 @@ class InvoiceService {
                               width: 25,
                               child: pw.Text(
                                 "$idx",
-                                style: const pw.TextStyle(fontSize: 9, color: formalNavy),
+                                style: const pw.TextStyle(
+                                  fontSize: 9,
+                                  color: formalNavy,
+                                ),
                               ),
                             ),
                             pw.Expanded(
@@ -565,7 +652,10 @@ class InvoiceService {
                                   pw.SizedBox(height: 1),
                                   pw.Text(
                                     "Type: ${item.category}",
-                                    style: const pw.TextStyle(fontSize: 7.5, color: formalMuted),
+                                    style: const pw.TextStyle(
+                                      fontSize: 7.5,
+                                      color: formalMuted,
+                                    ),
                                   ),
                                   if (item.coachOrDetails != null &&
                                       item.coachOrDetails!.isNotEmpty) ...[
@@ -587,23 +677,36 @@ class InvoiceService {
                               child: pw.Column(
                                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                                 children: [
-                                  if (item.startDate != null && item.expiryDate != null) ...[
+                                  if (item.startDate != null &&
+                                      item.expiryDate != null) ...[
                                     pw.Text(
                                       "${_formatDate(item.startDate!)} to",
-                                      style: const pw.TextStyle(fontSize: 8, color: formalNavy),
+                                      style: const pw.TextStyle(
+                                        fontSize: 8,
+                                        color: formalNavy,
+                                      ),
                                     ),
                                     pw.Text(
                                       _formatDate(item.expiryDate!),
-                                      style: const pw.TextStyle(fontSize: 8, color: formalNavy),
+                                      style: const pw.TextStyle(
+                                        fontSize: 8,
+                                        color: formalNavy,
+                                      ),
                                     ),
                                   ] else ...[
                                     pw.Text(
                                       "${_formatDate(invoice.startDate)} to",
-                                      style: const pw.TextStyle(fontSize: 8, color: formalNavy),
+                                      style: const pw.TextStyle(
+                                        fontSize: 8,
+                                        color: formalNavy,
+                                      ),
                                     ),
                                     pw.Text(
                                       _formatDate(invoice.expiryDate),
-                                      style: const pw.TextStyle(fontSize: 8, color: formalNavy),
+                                      style: const pw.TextStyle(
+                                        fontSize: 8,
+                                        color: formalNavy,
+                                      ),
                                     ),
                                   ],
                                 ],
@@ -648,8 +751,13 @@ class InvoiceService {
                           padding: const pw.EdgeInsets.all(8),
                           decoration: pw.BoxDecoration(
                             color: formalBg,
-                            border: pw.Border.all(color: formalBorder, width: 0.8),
-                            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                            border: pw.Border.all(
+                              color: formalBorder,
+                              width: 0.8,
+                            ),
+                            borderRadius: const pw.BorderRadius.all(
+                              pw.Radius.circular(4),
+                            ),
                           ),
                           child: pw.Column(
                             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -681,11 +789,17 @@ class InvoiceService {
                           padding: const pw.EdgeInsets.all(8),
                           decoration: pw.BoxDecoration(
                             color: formalBg,
-                            border: pw.Border.all(color: formalBorder, width: 0.8),
-                            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                            border: pw.Border.all(
+                              color: formalBorder,
+                              width: 0.8,
+                            ),
+                            borderRadius: const pw.BorderRadius.all(
+                              pw.Radius.circular(4),
+                            ),
                           ),
                           child: pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceBetween,
                             children: [
                               pw.Text(
                                 "Payment Method: ${invoice.paymentMode.toUpperCase()}",
@@ -720,35 +834,53 @@ class InvoiceService {
                       decoration: pw.BoxDecoration(
                         color: formalBg,
                         border: pw.Border.all(color: formalBorder, width: 0.8),
-                        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                        borderRadius: const pw.BorderRadius.all(
+                          pw.Radius.circular(4),
+                        ),
                       ),
                       child: pw.Column(
                         children: [
                           pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                                pw.MainAxisAlignment.spaceBetween,
                             children: [
                               pw.Text(
                                 "Gross Subtotal:",
-                                style: const pw.TextStyle(fontSize: 8.5, color: formalMuted),
+                                style: const pw.TextStyle(
+                                  fontSize: 8.5,
+                                  color: formalMuted,
+                                ),
                               ),
                               pw.Text(
                                 _formatCurrency(invoice.basePrice),
-                                style: const pw.TextStyle(fontSize: 8.5, color: formalNavy),
+                                style: const pw.TextStyle(
+                                  fontSize: 8.5,
+                                  color: formalNavy,
+                                ),
                               ),
                             ],
                           ),
                           if (invoice.discountAmount > 0) ...[
                             pw.SizedBox(height: 3),
                             pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
                               children: [
                                 pw.Text(
                                   "Discount / Concession:",
-                                  style: pw.TextStyle(fontSize: 8.5, color: formalEmerald, fontWeight: pw.FontWeight.bold),
+                                  style: pw.TextStyle(
+                                    fontSize: 8.5,
+                                    color: formalEmerald,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
                                 ),
                                 pw.Text(
                                   "- ${_formatCurrency(invoice.discountAmount)}",
-                                  style: pw.TextStyle(fontSize: 8.5, color: formalEmerald, fontWeight: pw.FontWeight.bold),
+                                  style: pw.TextStyle(
+                                    fontSize: 8.5,
+                                    color: formalEmerald,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -758,13 +890,19 @@ class InvoiceService {
                             child: pw.Divider(color: formalBorder, height: 0.8),
                           ),
                           pw.Container(
-                            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                            padding: const pw.EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 4,
+                            ),
                             decoration: pw.BoxDecoration(
                               color: formalNavy,
-                              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                              borderRadius: const pw.BorderRadius.all(
+                                pw.Radius.circular(3),
+                              ),
                             ),
                             child: pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
                               children: [
                                 pw.Text(
                                   "NET TOTAL PAID:",
@@ -872,11 +1010,8 @@ class InvoiceService {
               pw.SizedBox(height: 3),
               pw.Center(
                 child: pw.Text(
-                  "Thank you for choosing IRONBLOOD Gym & Fitness Studio • Strength • Discipline • Glory",
-                  style: const pw.TextStyle(
-                    fontSize: 7,
-                    color: formalMuted,
-                  ),
+                  "Thank you for choosing IRONBLOOD Gym & Fitness Studio | Strength | Discipline | Glory",
+                  style: const pw.TextStyle(fontSize: 7, color: formalMuted),
                 ),
               ),
             ],
@@ -888,8 +1023,20 @@ class InvoiceService {
     return pdf.save();
   }
 
-  /// Print or Save PDF Dialog
-  static Future<void> printOrDownload(BuildContext context, InvoiceModel invoice) async {
+  /// Direct download PDF file to device / browser downloads
+  static Future<void> downloadPdf(InvoiceModel invoice) async {
+    final pdfBytes = await generatePdf(invoice);
+    await Printing.sharePdf(
+      bytes: pdfBytes,
+      filename: "IRONBLOOD_Receipt_${invoice.invoiceNo}.pdf",
+    );
+  }
+
+  /// Print or Save PDF Dialog (Opens native printer/PDF preview on all platforms)
+  static Future<void> printOrDownload(
+    BuildContext context,
+    InvoiceModel invoice,
+  ) async {
     final pdfBytes = await generatePdf(invoice);
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdfBytes,
@@ -897,36 +1044,86 @@ class InvoiceService {
     );
   }
 
-  /// Open PDF in Google Drive PDF Viewer or default installed PDF reader
-  static Future<void> openPdfFile(BuildContext context, InvoiceModel invoice) async {
-    try {
-      final file = await getTempPdfFile(invoice);
-      final result = await OpenFilex.open(
-        file.path,
-        type: 'application/pdf',
-      );
-      if (result.type != ResultType.done) {
-        debugPrint("OpenFilex open result: ${result.message}");
-        await sharePdfFile(invoice);
-      }
-    } catch (e) {
-      debugPrint("openPdfFile error: $e");
-      await sharePdfFile(invoice);
-    }
+  /// Open interactive In-App PDF Viewer (Works 100% on Web, Mobile, Desktop)
+  static void openPdfViewer(BuildContext context, InvoiceModel invoice) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => Scaffold(
+          backgroundColor: const Color(0xFF091911),
+          appBar: AppBar(
+            backgroundColor: const Color(0xFF07180F),
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Color(0xFFC9A227),
+                size: 20,
+              ),
+              onPressed: () => Navigator.pop(ctx),
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "INVOICE #${invoice.invoiceNo}",
+                  style: GoogleFonts.rajdhani(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                    color: const Color(0xFFFFE082),
+                  ),
+                ),
+                Text(
+                  "${invoice.memberName} • ${invoice.category}",
+                  style: GoogleFonts.rajdhani(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.print_rounded, color: Color(0xFFC9A227)),
+                tooltip: "Print / Save PDF",
+                onPressed: () => printOrDownload(ctx, invoice),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.download_rounded,
+                  color: Color(0xFFC9A227),
+                ),
+                tooltip: "Download PDF",
+                onPressed: () => downloadPdf(invoice),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+          body: PdfPreview(
+            build: (format) => generatePdf(invoice),
+            allowPrinting: true,
+            allowSharing: true,
+            canChangePageFormat: false,
+            canChangeOrientation: false,
+            canDebug: false,
+            pdfFileName: "IRONBLOOD_Receipt_${invoice.invoiceNo}.pdf",
+            previewPageMargin: const EdgeInsets.all(12),
+            loadingWidget: const Center(
+              child: CircularProgressIndicator(color: Color(0xFFC9A227)),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  /// Save PDF to file in app documents / temp storage and return path
-  static Future<File> getTempPdfFile(InvoiceModel invoice) async {
-    final pdfBytes = await generatePdf(invoice);
-    Directory dir;
-    try {
-      dir = await getApplicationDocumentsDirectory();
-    } catch (_) {
-      dir = await getTemporaryDirectory();
-    }
-    final file = File("${dir.path}/IRONBLOOD_Receipt_${invoice.invoiceNo}.pdf");
-    await file.writeAsBytes(pdfBytes, flush: true);
-    return file;
+  /// Open PDF Viewer on any platform (Web, Android, iOS, Windows, Mac)
+  static Future<void> openPdfFile(
+    BuildContext context,
+    InvoiceModel invoice,
+  ) async {
+    openPdfViewer(context, invoice);
   }
 
   /// Format receipt summary text for system share
@@ -944,12 +1141,16 @@ class InvoiceService {
       buffer.writeln("ITEMIZED BILLING:");
       for (int i = 0; i < invoice.items.length; i++) {
         final it = invoice.items[i];
-        buffer.writeln(" ${i + 1}. ${it.description} - ${_formatCurrency(it.amount)}");
+        buffer.writeln(
+          " ${i + 1}. ${it.description} - ${_formatCurrency(it.amount)}",
+        );
         if (it.coachOrDetails != null && it.coachOrDetails!.isNotEmpty) {
           buffer.writeln("    (${it.coachOrDetails})");
         }
         if (it.startDate != null && it.expiryDate != null) {
-          buffer.writeln("    Validity: ${_formatDate(it.startDate!)} to ${_formatDate(it.expiryDate!)}");
+          buffer.writeln(
+            "    Validity: ${_formatDate(it.startDate!)} to ${_formatDate(it.expiryDate!)}",
+          );
         }
       }
       buffer.writeln("━━━━━━━━━━━━━━━━━━━━━━");
@@ -960,11 +1161,15 @@ class InvoiceService {
           invoice.trainerName != 'Unassigned') {
         buffer.writeln("Dedicated Coach: ${invoice.trainerName}");
       }
-      buffer.writeln("Validity: ${_formatDate(invoice.startDate)} to ${_formatDate(invoice.expiryDate)}");
+      buffer.writeln(
+        "Validity: ${_formatDate(invoice.startDate)} to ${_formatDate(invoice.expiryDate)}",
+      );
     }
     buffer.writeln("Gross Subtotal: ${_formatCurrency(invoice.basePrice)}");
     if (invoice.discountAmount > 0) {
-      buffer.writeln("Discount Applied: - ${_formatCurrency(invoice.discountAmount)}");
+      buffer.writeln(
+        "Discount Applied: - ${_formatCurrency(invoice.discountAmount)}",
+      );
     }
     buffer.writeln("Total Paid: ${_formatCurrency(invoice.finalAmount)}");
     buffer.writeln("Payment Mode: ${invoice.paymentMode} (CONFIRMED)");
@@ -976,18 +1181,14 @@ class InvoiceService {
   /// Share PDF File with formatted text receipt using system share sheet
   static Future<void> sharePdfFile(InvoiceModel invoice) async {
     try {
-      final file = await getTempPdfFile(invoice);
+      final pdfBytes = await generatePdf(invoice);
       final text = formatReceiptText(invoice);
-      await Share.shareXFiles(
-        [
-          XFile(
-            file.path,
-            mimeType: 'application/pdf',
-            name: 'IRONBLOOD_Receipt_${invoice.invoiceNo}.pdf',
-          ),
-        ],
-        subject: "IRONBLOOD Gym Invoice #${invoice.invoiceNo} - ${invoice.memberName}",
-        text: text,
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: 'IRONBLOOD_Receipt_${invoice.invoiceNo}.pdf',
+        subject:
+            "IRONBLOOD Gym Invoice #${invoice.invoiceNo} - ${invoice.memberName}",
+        body: text,
       );
     } catch (e) {
       debugPrint("sharePdfFile error: $e");
@@ -1005,16 +1206,16 @@ class InvoiceService {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 24,
+          ),
           child: Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               color: const Color(0xFF0A1F15),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: const Color(0xFFC9A227),
-                width: 1.5,
-              ),
+              border: Border.all(color: const Color(0xFFC9A227), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.6),
@@ -1042,7 +1243,9 @@ class InvoiceService {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFC9A227).withValues(alpha: 0.35),
+                          color: const Color(
+                            0xFFC9A227,
+                          ).withValues(alpha: 0.35),
                           blurRadius: 14,
                           spreadRadius: 1,
                         ),
@@ -1112,18 +1315,26 @@ class InvoiceService {
                     decoration: BoxDecoration(
                       color: const Color(0xFF06140D),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: const Color(0xFF1E4230),
-                      ),
+                      border: Border.all(color: const Color(0xFF1E4230)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildReceiptRow("Athlete", "${invoice.memberName} (${invoice.memberId})"),
+                        _buildReceiptRow(
+                          "Athlete",
+                          "${invoice.memberName} (${invoice.memberId})",
+                        ),
                         const SizedBox(height: 6),
-                        _buildReceiptRow("Date", _formatDate(invoice.invoiceDate)),
+                        _buildReceiptRow(
+                          "Date",
+                          _formatDate(invoice.invoiceDate),
+                        ),
                         const SizedBox(height: 6),
-                        _buildReceiptRow("Payment Mode", invoice.paymentMode, valueColor: const Color(0xFFFFE082)),
+                        _buildReceiptRow(
+                          "Payment Mode",
+                          invoice.paymentMode,
+                          valueColor: const Color(0xFFFFE082),
+                        ),
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8),
                           child: Divider(color: Color(0xFF1B4931), height: 1),
@@ -1144,7 +1355,10 @@ class InvoiceService {
                             final it = entry.value;
                             return Container(
                               margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 7,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF0B2117),
                                 borderRadius: BorderRadius.circular(8),
@@ -1153,11 +1367,13 @@ class InvoiceService {
                                 ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           "$idx. ${it.description}",
@@ -1167,7 +1383,8 @@ class InvoiceService {
                                             color: Colors.white,
                                           ),
                                         ),
-                                        if (it.coachOrDetails != null && it.coachOrDetails!.isNotEmpty)
+                                        if (it.coachOrDetails != null &&
+                                            it.coachOrDetails!.isNotEmpty)
                                           Text(
                                             it.coachOrDetails!,
                                             style: GoogleFonts.rajdhani(
@@ -1176,7 +1393,8 @@ class InvoiceService {
                                               color: const Color(0xFF10B981),
                                             ),
                                           ),
-                                        if (it.startDate != null && it.expiryDate != null)
+                                        if (it.startDate != null &&
+                                            it.expiryDate != null)
                                           Text(
                                             "${_formatDate(it.startDate!)} - ${_formatDate(it.expiryDate!)}",
                                             style: GoogleFonts.rajdhani(
@@ -1210,16 +1428,26 @@ class InvoiceService {
                             _buildReceiptRow("PT Coach", invoice.trainerName!),
                           ],
                           const SizedBox(height: 6),
-                          _buildReceiptRow("Validity", "${_formatDate(invoice.startDate)} - ${_formatDate(invoice.expiryDate)}"),
+                          _buildReceiptRow(
+                            "Validity",
+                            "${_formatDate(invoice.startDate)} - ${_formatDate(invoice.expiryDate)}",
+                          ),
                         ],
                         if (invoice.discountAmount > 0) ...[
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 6),
                             child: Divider(color: Color(0xFF1B4931), height: 1),
                           ),
-                          _buildReceiptRow("Gross Subtotal", _formatCurrency(invoice.basePrice)),
+                          _buildReceiptRow(
+                            "Gross Subtotal",
+                            _formatCurrency(invoice.basePrice),
+                          ),
                           const SizedBox(height: 4),
-                          _buildReceiptRow("Discount Applied", "- ${_formatCurrency(invoice.discountAmount)}", valueColor: const Color(0xFF81C784)),
+                          _buildReceiptRow(
+                            "Discount Applied",
+                            "- ${_formatCurrency(invoice.discountAmount)}",
+                            valueColor: const Color(0xFF81C784),
+                          ),
                         ],
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8),
@@ -1253,16 +1481,33 @@ class InvoiceService {
 
                   const SizedBox(height: 18),
 
-                  // In-App Open PDF Action Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: _buildActionButton(
-                      icon: Icons.picture_as_pdf_rounded,
-                      label: "VIEW INVOICE",
-                      backgroundColor: const Color(0xFFC9A227),
-                      textColor: const Color(0xFF091911),
-                      onTap: () => openPdfFile(context, invoice),
-                    ),
+                  // Side-by-side Action Buttons: VIEW INVOICE and DOWNLOAD
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionButton(
+                          icon: Icons.visibility_rounded,
+                          label: "VIEW INVOICE",
+                          backgroundColor: const Color(0xFFC9A227),
+                          textColor: const Color(0xFF091911),
+                          onTap: () {
+                            Navigator.pop(context);
+                            openPdfViewer(context, invoice);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildActionButton(
+                          icon: Icons.download_rounded,
+                          label: "DOWNLOAD",
+                          backgroundColor: const Color(0xFF103A27),
+                          borderColor: const Color(0xFF236E4A),
+                          textColor: const Color(0xFFFFE082),
+                          onTap: () => downloadPdf(invoice),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 12),
@@ -1273,7 +1518,10 @@ class InvoiceService {
                     height: 42,
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF1E4230), width: 1.2),
+                        side: const BorderSide(
+                          color: Color(0xFF1E4230),
+                          width: 1.2,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -1299,7 +1547,11 @@ class InvoiceService {
     );
   }
 
-  static Widget _buildReceiptRow(String label, String value, {Color? valueColor}) {
+  static Widget _buildReceiptRow(
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1336,7 +1588,9 @@ class InvoiceService {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(10),
-        border: borderColor != null ? Border.all(color: borderColor, width: 1) : null,
+        border: borderColor != null
+            ? Border.all(color: borderColor, width: 1)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
